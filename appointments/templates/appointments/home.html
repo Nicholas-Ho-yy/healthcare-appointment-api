@@ -1,0 +1,476 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>Healthcare Appointment No-Show API</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        header {
+            background: #1f4e79;
+            color: white;
+            padding: 35px 60px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 42px;
+        }
+
+        header p {
+            margin-top: 10px;
+            max-width: 920px;
+            line-height: 1.6;
+        }
+
+        main {
+            padding: 30px 60px;
+        }
+
+        .section {
+            background: white;
+            margin-bottom: 25px;
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        }
+
+        h2 {
+            margin-top: 0;
+            color: #1f4e79;
+        }
+
+        .section-description {
+            margin-top: -5px;
+            margin-bottom: 20px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .endpoint-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+            gap: 15px;
+        }
+
+        .card {
+            border: 1px solid #d9e2ec;
+            border-radius: 10px;
+            padding: 16px;
+            background: #fafcff;
+        }
+
+        .card a {
+            text-decoration: none;
+            color: #1f4e79;
+            font-weight: bold;
+        }
+
+        .card a:hover {
+            text-decoration: underline;
+        }
+
+        .card p {
+            margin-bottom: 0;
+            font-size: 14px;
+            color: #555;
+            line-height: 1.5;
+        }
+
+        .method {
+            display: inline-block;
+            font-size: 12px;
+            padding: 4px 8px;
+            border-radius: 6px;
+            background: #e7f1ff;
+            color: #1f4e79;
+            margin-bottom: 8px;
+            font-weight: bold;
+        }
+
+        code {
+            background: #eef3f8;
+            padding: 3px 6px;
+            border-radius: 4px;
+            font-size: 13px;
+            display: inline-block;
+            margin-top: 4px;
+            overflow-wrap: anywhere;
+        }
+
+        footer {
+            text-align: center;
+            padding: 20px;
+            color: #666;
+            font-size: 14px;
+        }
+
+        @media (max-width: 700px) {
+            header,
+            main {
+                padding-left: 20px;
+                padding-right: 20px;
+            }
+
+            header h1 {
+                font-size: 32px;
+            }
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Healthcare Appointment No-Show API</h1>
+
+    <p>
+        This Django REST Framework application analyses healthcare appointment
+        attendance, patient medical conditions, waiting time and no-show behaviour
+        using the Healthcare Appointment No-Show dataset.
+    </p>
+
+    <p>
+        The API uses <strong>HyperlinkedModelSerializer</strong> and a small number
+        of reusable RESTful resource endpoints. Clients can combine query parameters
+        such as age range, medical conditions, attendance status and waiting time
+        instead of relying on multiple hardcoded endpoints.
+    </p>
+</header>
+
+<main>
+
+    <section class="section">
+        <h2>Patient API and Example Queries</h2>
+
+        <p class="section-description">
+            All patient queries use the same <code>/api/patients/</code> endpoint.
+            The examples below demonstrate how callers can choose their own filters.
+        </p>
+
+        <div class="endpoint-grid">
+
+            <div class="card">
+                <span class="method">GET / POST</span><br>
+
+                <a href="/api/patients/">
+                    Patient Collection
+                </a>
+
+                <p>
+                    Retrieve patient records or create a new patient using POST.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">GET / PUT / PATCH / DELETE</span><br>
+
+                <a href="/api/patients/1/">
+                    Patient Detail
+                </a>
+
+                <p>
+                    Retrieve, update or delete one patient record.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/patients/?min_age=40&max_age=60">
+                    Patients by Age Range
+                </a>
+
+                <p>
+                    The caller chooses the minimum and maximum ages.<br>
+
+                    <a href="/api/patients/?min_age=40&max_age=60">
+                        <code>?min_age=40&amp;max_age=60</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/patients/?diabetes=true">
+                    Patients by Medical Condition
+                </a>
+
+                <p>
+                    Filter using Boolean health fields.<br>
+
+                    <a href="/api/patients/?diabetes=true">
+                        <code>?diabetes=true</code>
+                    </a><br>
+
+                    <a href="/api/patients/?hypertension=true">
+                        <code>?hypertension=true</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">COMBINED FILTERS</span><br>
+
+                <a href="/api/patients/?min_age=65&diabetes=true&hypertension=true">
+                    Combined Patient Filters
+                </a>
+
+                <p>
+                    Combine age and medical-condition filters.<br>
+
+                    <a href="/api/patients/?min_age=65&diabetes=true&hypertension=true">
+                        <code>?min_age=65</code><br>
+                        <code>&amp;diabetes=true</code><br>
+                        <code>&amp;hypertension=true</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">RESULT CONTROL</span><br>
+
+                <a href="/api/patients/?limit=20">
+                    Limit Patient Results
+                </a>
+
+                <p>
+                    The caller chooses how many records to return.<br>
+
+                    <a href="/api/patients/?limit=20">
+                        <code>?limit=20</code>
+                    </a>
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Appointment API and Example Queries</h2>
+
+        <p class="section-description">
+            All appointment searches use the same
+            <code>/api/appointments/</code> endpoint. Filters can be combined
+            to answer different healthcare questions.
+        </p>
+
+        <div class="endpoint-grid">
+
+            <div class="card">
+                <span class="method">GET / POST</span><br>
+
+                <a href="/api/appointments/">
+                    Appointment Collection
+                </a>
+
+                <p>
+                    Retrieve appointment records or create a new appointment.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">GET / PUT / PATCH / DELETE</span><br>
+
+                <a href="/api/appointments/1/">
+                    Appointment Detail
+                </a>
+
+                <p>
+                    Retrieve, update or delete one appointment record.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/appointments/?showed_up=false">
+                    Attendance Status
+                </a>
+
+                <p>
+                    Return appointments where patients did not attend.<br>
+
+                    <a href="/api/appointments/?showed_up=false">
+                        <code>?showed_up=false</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">COMBINED FILTERS</span><br>
+
+                <a href="/api/appointments/?showed_up=false&sms_received=true">
+                    SMS and No-Show Analysis
+                </a>
+
+                <p>
+                    Find missed appointments where an SMS reminder was received.<br>
+
+                    <a href="/api/appointments/?showed_up=false&sms_received=true">
+                        <code>?showed_up=false</code><br>
+                        <code>&amp;sms_received=true</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">COMBINED FILTERS</span><br>
+
+                <a href="/api/appointments/?showed_up=false&min_age=65&diabetes=true">
+                    Patient Risk and Attendance
+                </a>
+
+                <p>
+                    Combine attendance, age and medical-condition filters.<br>
+
+                    <a href="/api/appointments/?showed_up=false&min_age=65&diabetes=true">
+                        <code>?showed_up=false</code><br>
+                        <code>&amp;min_age=65</code><br>
+                        <code>&amp;diabetes=true</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/appointments/?min_wait_days=10&max_wait_days=30">
+                    Waiting-Time Range
+                </a>
+
+                <p>
+                    The caller chooses the minimum and maximum waiting time.<br>
+
+                    <a href="/api/appointments/?min_wait_days=10&max_wait_days=30">
+                        <code>?min_wait_days=10</code><br>
+                        <code>&amp;max_wait_days=30</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/appointments/?neighbourhood=JARDIM">
+                    Appointments by Neighbourhood
+                </a>
+
+                <p>
+                    Search appointment records using part of a neighbourhood name.<br>
+
+                    <a href="/api/appointments/?neighbourhood=JARDIM">
+                        <code>?neighbourhood=JARDIM</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">RESULT CONTROL</span><br>
+
+                <a href="/api/appointments/?limit=20">
+                    Limit Appointment Results
+                </a>
+
+                <p>
+                    Return a caller-selected number of appointments.<br>
+
+                    <a href="/api/appointments/?limit=20">
+                        <code>?limit=20</code>
+                    </a>
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+    <section class="section">
+        <h2>Reference Data and Analytics</h2>
+
+        <div class="endpoint-grid">
+
+            <div class="card">
+                <span class="method">GET</span><br>
+
+                <a href="/api/neighbourhoods/">
+                    Neighbourhood Collection
+                </a>
+
+                <p>
+                    Retrieve neighbourhood reference data.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FILTER EXAMPLE</span><br>
+
+                <a href="/api/neighbourhoods/?search=JARDIM">
+                    Search Neighbourhoods
+                </a>
+
+                <p>
+                    Search neighbourhood names using a query parameter.<br>
+
+                    <a href="/api/neighbourhoods/?search=JARDIM">
+                        <code>?search=JARDIM</code>
+                    </a>
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">GET</span><br>
+
+                <a href="/api/statistics/no-show-rate/">
+                    No-Show Statistics
+                </a>
+
+                <p>
+                    Display total appointments, attendance counts and the overall
+                    no-show rate.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">FORM</span><br>
+
+                <a href="/patients/add/">
+                    Add Patient Form
+                </a>
+
+                <p>
+                    Use a standard Django form to add a patient record.
+                </p>
+            </div>
+
+            <div class="card">
+                <span class="method">ADMIN</span><br>
+
+                <a href="/admin/">
+                    Django Administration
+                </a>
+
+                <p>
+                    Manage patients, appointments and neighbourhoods.
+                </p>
+            </div>
+
+        </div>
+    </section>
+
+</main>
+
+<footer>
+    Built using Django, Django REST Framework and SQLite.
+</footer>
+
+</body>
+</html>

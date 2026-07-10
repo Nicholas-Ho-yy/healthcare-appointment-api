@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Add New Patient</title>
+
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            background: #f4f7fb;
+            color: #222;
+        }
+
+        header {
+            background: #1f4e79;
+            color: white;
+            padding: 35px 60px;
+        }
+
+        header h1 {
+            margin: 0;
+            font-size: 30px;
+        }
+
+        header p {
+            margin-top: 10px;
+            max-width: 800px;
+            line-height: 1.5;
+        }
+
+        main {
+            padding: 30px 60px;
+        }
+
+        .form-card {
+            background: white;
+            max-width: 480px;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+        }
+
+        .field-group {
+            margin-bottom: 18px;
+        }
+
+        .field-group label {
+            display: block;
+            font-weight: bold;
+            color: #1f4e79;
+            margin-bottom: 6px;
+        }
+
+        .field-group input[type="text"],
+        .field-group input[type="number"],
+        .field-group select {
+            width: 100%;
+            padding: 8px 10px;
+            border: 1px solid #d9e2ec;
+            border-radius: 6px;
+            font-size: 14px;
+            box-sizing: border-box;
+        }
+
+        .checkbox-group {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 14px;
+        }
+
+        .checkbox-group label {
+            font-weight: bold;
+            color: #1f4e79;
+            margin: 0;
+        }
+
+        .checkbox-group input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+        }
+
+        .errorlist {
+            color: #b3261e;
+            font-size: 13px;
+            list-style: none;
+            padding: 0;
+            margin: 4px 0 0 0;
+        }
+
+        button {
+            background: #1f4e79;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 15px;
+            font-weight: bold;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #163a5c;
+        }
+
+        .back-link {
+            display: inline-block;
+            margin-top: 20px;
+            color: #1f4e79;
+            font-weight: bold;
+            text-decoration: none;
+        }
+
+        .back-link:hover {
+            text-decoration: underline;
+        }
+    </style>
+</head>
+
+<body>
+
+<header>
+    <h1>Add New Patient</h1>
+    <p>This form allows healthcare staff to register a new patient.</p>
+</header>
+
+<main>
+    <div class="form-card">
+        <form method="post">
+            {% csrf_token %}
+
+            <div class="field-group">
+                <label for="{{ form.patient_id.id_for_label }}">Patient ID</label>
+                {{ form.patient_id }}
+                {{ form.patient_id.errors }}
+            </div>
+
+            <div class="field-group">
+                <label for="{{ form.gender.id_for_label }}">Gender</label>
+                {{ form.gender }}
+                {{ form.gender.errors }}
+            </div>
+
+            <div class="field-group">
+                <label for="{{ form.age.id_for_label }}">Age</label>
+                {{ form.age }}
+                {{ form.age.errors }}
+            </div>
+
+            <div class="checkbox-group">
+                {{ form.scholarship }}
+                <label for="{{ form.scholarship.id_for_label }}">Scholarship</label>
+            </div>
+
+            <div class="checkbox-group">
+                {{ form.hypertension }}
+                <label for="{{ form.hypertension.id_for_label }}">Hypertension</label>
+            </div>
+
+            <div class="checkbox-group">
+                {{ form.diabetes }}
+                <label for="{{ form.diabetes.id_for_label }}">Diabetes</label>
+            </div>
+
+            <div class="checkbox-group">
+                {{ form.alcoholism }}
+                <label for="{{ form.alcoholism.id_for_label }}">Alcoholism</label>
+            </div>
+
+            <div class="field-group">
+                <label for="{{ form.handicap.id_for_label }}">Handicap (0 = No, 1 = Yes)</label>
+                {{ form.handicap }}
+                {{ form.handicap.errors }}
+            </div>
+
+            <button type="submit">Save Patient</button>
+        </form>
+
+        <a class="back-link" href="/">&larr; Back to Home</a>
+    </div>
+</main>
+
+</body>
+</html>
