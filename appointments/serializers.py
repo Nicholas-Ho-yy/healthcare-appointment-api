@@ -4,10 +4,13 @@ from .models import Patient, Neighbourhood, Appointment
 
 class PatientSerializer(serializers.HyperlinkedModelSerializer):
     """
-    Hyperlinked serializer for Patient records.
-    The url field allows API users to navigate directly to each patient detail endpoint.
+    Serializer for Patient records.
+
+    Hyperlinks are used instead of IDS so related
+    resources can be accessed more easily through the API.
     """
 
+    # Show all appointments that belong to this patient.
     appointments = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
@@ -30,6 +33,7 @@ class PatientSerializer(serializers.HyperlinkedModelSerializer):
             "appointments",
         ]
 
+    # Prevent negative ages from being accepted.
     def validate_age(self, value):
         if value < 0:
             raise serializers.ValidationError("Age cannot be negative.")
@@ -38,9 +42,10 @@ class PatientSerializer(serializers.HyperlinkedModelSerializer):
 
 class NeighbourhoodSerializer(serializers.HyperlinkedModelSerializer):
     """
-    Hyperlinked serializer for neighbourhood records.
+    Serializer for neighbourhood records.
     """
 
+    # Show all appointments in this neighbourhood.
     appointments = serializers.HyperlinkedRelatedField(
         many=True,
         read_only=True,
@@ -59,10 +64,10 @@ class NeighbourhoodSerializer(serializers.HyperlinkedModelSerializer):
 
 class AppointmentSerializer(serializers.HyperlinkedModelSerializer):
     """
-    Hyperlinked serializer for Appointment records.
+    Serializer for appointment records.
 
-    patient and neighbourhood are represented as hyperlinks instead of plain IDs,
-    which meets the Django REST Framework hyperlinked serializer requirement.
+    Patient and neighbourhood are returned as hyperlinks
+    instead of plain IDs.
     """
 
     patient = serializers.HyperlinkedRelatedField(
@@ -90,6 +95,8 @@ class AppointmentSerializer(serializers.HyperlinkedModelSerializer):
             "date_difference",
         ]
 
+    # Check that the appointment date is not
+    # earlier than the scheduled date.
     def validate(self, data):
         scheduled = data.get(
             "scheduled_day",

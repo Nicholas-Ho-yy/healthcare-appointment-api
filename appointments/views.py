@@ -18,15 +18,11 @@ MAX_LIMIT = 1000
 
 def parse_integer_parameter(request, name, minimum=None, maximum=None):
     """
-    Read and validate an optional integer query parameter.
+    Read an optional number from the query string.
 
-    Returns:
-        tuple: (value, error_response)
-
-    If the parameter is missing, value is None.
-    If the parameter is invalid, error_response contains a HTTP 400 response.
+    If the value is missing, return None. If it is invalid,
+    return a clear 400 Bad Request response.
     """
-
     raw_value = request.query_params.get(name)
 
     if raw_value in (None, ""):
@@ -57,13 +53,10 @@ def parse_integer_parameter(request, name, minimum=None, maximum=None):
 
 def parse_boolean_parameter(request, name):
     """
-    Read and validate an optional Boolean query parameter.
+    Read an optional true or false value from the query string.
 
-    Accepted true values:
-        true, 1, yes
-
-    Accepted false values:
-        false, 0, no
+    The API also accepts 1/0 and yes/no to make the
+    parameter easier to use.
     """
 
     raw_value = request.query_params.get(name)
@@ -92,10 +85,10 @@ def parse_boolean_parameter(request, name):
 
 def get_limit(request):
     """
-    Return a validated result limit.
+    Read and check the requested result limit.
 
-    The API returns 100 records by default, but the caller can select
-    another value using ?limit=20. The maximum allowed value is 1000.
+    The API returns 100 records by default and allows
+    callers to request up to 1,000 records.
     """
 
     raw_limit = request.query_params.get("limit")
@@ -114,13 +107,13 @@ def get_limit(request):
 
 
 def home(request):
-    """Render the API homepage."""
+    """Show the homepage and links to the API examples."""
 
     return render(request, "appointments/home.html")
 
 
 def patient_form(request):
-    """Display and process the standard Django patient form."""
+    """Show the patient form and save valid submissions."""
 
     if request.method == "POST":
         form = PatientForm(request.POST)
@@ -141,7 +134,10 @@ def patient_form(request):
 @api_view(["GET", "POST"])
 def patient_list(request):
     """
-    List or create patient records.
+    Return patient records or create a new patient.
+
+    The GET parameters below can be used separately
+    or combined to produce different patient queries.
 
     Supported GET parameters:
         min_age
@@ -160,6 +156,7 @@ def patient_list(request):
     """
 
     if request.method == "POST":
+        # Validate and save a new patient sent through the API.
         serializer = PatientSerializer(
             data=request.data,
             context={"request": request},
@@ -308,7 +305,11 @@ def patient_detail(request, pk):
 @api_view(["GET", "POST"])
 def appointment_list(request):
     """
-    List or create appointment records.
+    Return appointment records or create a new appointment.
+
+    The GET parameters can be combined to perform more
+    advanced searches across appointments, patients,
+    and neighbourhoods.
 
     Supported GET parameters:
         showed_up
@@ -331,6 +332,7 @@ def appointment_list(request):
     """
 
     if request.method == "POST":
+        # Validate and save a new appointment sent through the API.
         serializer = AppointmentSerializer(
             data=request.data,
             context={"request": request},
@@ -348,6 +350,8 @@ def appointment_list(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # Load the related patient and neighbourhood in the same query
+    # so Django does not need extra database lookups for every record.
     appointments = Appointment.objects.select_related(
         "patient",
         "neighbourhood",
@@ -486,9 +490,7 @@ def appointment_list(request):
 
 @api_view(["GET", "PUT", "PATCH", "DELETE"])
 def appointment_detail(request, pk):
-    """
-    Retrieve, replace, partially update or delete one appointment.
-    """
+    """Retrieve, update or delete one appointment."""
 
     appointment = get_object_or_404(
         Appointment.objects.select_related(
@@ -535,13 +537,8 @@ def neighbourhood_list(request):
     """
     Return neighbourhood records.
 
-    Supported GET parameters:
-        search
-        limit
-
-    Examples:
-        /api/neighbourhoods/?search=JARDIM
-        /api/neighbourhoods/?limit=20
+    The optional search parameter matches part of a
+    neighbourhood name, while limit controls the result count.
     """
 
     neighbourhoods = Neighbourhood.objects.all()
@@ -568,7 +565,7 @@ def neighbourhood_list(request):
 
 @api_view(["GET"])
 def neighbourhood_detail(request, pk):
-    """Return one neighbourhood record."""
+    """Return one neighbourhood."""
 
     neighbourhood = get_object_or_404(Neighbourhood, pk=pk)
 
@@ -583,7 +580,7 @@ def neighbourhood_detail(request, pk):
 @api_view(["GET"])
 def no_show_rate(request):
     """
-    Return the overall appointment attendance statistics.
+    Calculate the overall attendance and no-show statistics.
     """
 
     total_appointments = Appointment.objects.count()

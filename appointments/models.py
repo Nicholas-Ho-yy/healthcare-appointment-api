@@ -14,6 +14,9 @@ class Patient(models.Model):
 
     patient_id = models.CharField(max_length=50, unique=True)
     gender = models.CharField(max_length=1, choices=Gender.choices)
+
+    # The dataset may contain unusual ages, so the model
+    # limits the value to a realistic maximum of 120.
     age = models.PositiveSmallIntegerField(validators=[MaxValueValidator(120)])
 
     scholarship = models.BooleanField(default=False)
@@ -21,7 +24,8 @@ class Patient(models.Model):
     diabetes = models.BooleanField(default=False)
     alcoholism = models.BooleanField(default=False)
 
-    # In the original dataset, Handicap can contain values above 1.
+    # The dataset stores handicap as a number from 0 to 4,
+    # rather than as a simple True or False value.
     handicap = models.PositiveSmallIntegerField(
         default=0,
         validators=[MaxValueValidator(4)]
@@ -29,6 +33,9 @@ class Patient(models.Model):
 
     class Meta:
         ordering = ["id"]
+
+        # These fields are used often when filtering patients,
+        # so indexes help the database find matching records faster.
         indexes = [
             models.Index(fields=["age"]),
             models.Index(fields=["gender"]),
@@ -40,8 +47,8 @@ class Patient(models.Model):
 
 class Neighbourhood(models.Model):
     """
-    Stores each unique neighbourhood only once.
-    Appointments link to this table using a foreign key.
+    Stores each neighbourhood once so it can be reused
+    by multiple appointment records.
     """
 
     name = models.CharField(max_length=100, unique=True)
@@ -61,12 +68,14 @@ class Appointment(models.Model):
 
     appointment_id = models.CharField(max_length=50, unique=True)
 
+    # Delete a patient's appointments if the patient is removed.
     patient = models.ForeignKey(
         Patient,
         on_delete=models.CASCADE,
         related_name="appointments"
     )
 
+    # Delete related appointments if a neighbourhood is removed.
     neighbourhood = models.ForeignKey(
         Neighbourhood,
         on_delete=models.CASCADE,
@@ -78,15 +87,19 @@ class Appointment(models.Model):
 
     sms_received = models.BooleanField(default=False)
 
-    # Dataset uses "No-show": Yes means the patient did not attend.
-    # This field stores the opposite: True means the patient attended.
+    # The source dataset uses a "No-show" field.
+    # This model stores the opposite, so True means the patient attended.
     showed_up = models.BooleanField(default=True)
 
-    # Difference in days between scheduled date and appointment date.
+    # Stores the number of days between scheduling
+    # the appointment and the actual appointment date.
     date_difference = models.IntegerField(null=True, blank=True)
 
     class Meta:
         ordering = ["id"]
+
+        # These indexes support the fields most often used
+        # by the appointment filtering endpoint.
         indexes = [
             models.Index(fields=["showed_up"]),
             models.Index(fields=["sms_received"]),

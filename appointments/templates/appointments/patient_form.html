@@ -1,5 +1,12 @@
 <!DOCTYPE html>
 <html>
+
+<!--
+    Patient registration page.
+
+    This page displays a Django form that allows users
+    to add a new patient to the database.
+-->
 <head>
     <title>Add New Patient</title>
 
@@ -125,6 +132,10 @@
     <p>This form allows healthcare staff to register a new patient.</p>
 </header>
 
+<!-- ================================================
+Patient registration form
+================================================ -->
+
 <main>
     <div class="form-card">
         <form method="post">
@@ -174,9 +185,11 @@
                 {{ form.handicap.errors }}
             </div>
 
+            <!-- Submit the completed form -->
             <button type="submit">Save Patient</button>
-        </form>
-
+        </form> 
+        
+        <!-- Return to the homepage -->
         <a class="back-link" href="/">&larr; Back to Home</a>
     </div>
 </main>

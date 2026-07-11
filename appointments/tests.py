@@ -7,10 +7,17 @@ from .models import Patient, Neighbourhood, Appointment
 
 
 class APITest(TestCase):
+    """
+    Tests the main API endpoints, filters, validation rules,
+    and CRUD operations used by the application.
+    """
 
     def setUp(self):
+         # Create a fresh API client before each test.
         self.client = APIClient()
 
+        # This patient matches the high-risk filters used
+        # in several of the appointment tests.
         self.patient = Patient.objects.create(
             patient_id="TEST001",
             gender="M",
@@ -26,6 +33,7 @@ class APITest(TestCase):
             name="TEST_NEIGHBOURHOOD"
         )
 
+        # Create one missed appointment that received an SMS reminder.
         self.appointment = Appointment.objects.create(
             appointment_id="APP001",
             patient=self.patient,
@@ -37,7 +45,7 @@ class APITest(TestCase):
             date_difference=3
         )
 
-    # Basic endpoint tests
+    # Check that the main pages and resource endpoints are available.
     def test_homepage(self):
         response = self.client.get("/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -67,7 +75,7 @@ class APITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(response.data["appointment_id"], "APP001")
 
-    # Query parameter filter tests
+    # Check that query parameters return the expected records.
     def test_filter_patients_by_min_age(self):
         response = self.client.get("/api/patients/?min_age=65")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -97,7 +105,7 @@ class APITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(len(response.data), 1)
 
-    # Statistics endpoint
+    # Check the summary values returned by the statistics endpoint.
     def test_no_show_rate_endpoint(self):
         response = self.client.get("/api/statistics/no-show-rate/")
         self.assertEqual(response.status_code, status.HTTP_200_OK)
@@ -105,7 +113,7 @@ class APITest(TestCase):
         self.assertEqual(response.data["no_show_count"], 1)
         self.assertEqual(response.data["showed_up_count"], 0)
 
-    # CRUD and validation tests
+    # Check patient creation, validation, updating, and deletion.
     def test_create_patient(self):
         data = {
             "patient_id": "TEST002",
@@ -175,6 +183,7 @@ class APITest(TestCase):
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertEqual(Patient.objects.count(), 0)
 
+    # Check the cross-field validation in AppointmentSerializer.
     def test_invalid_appointment_date_order(self):
         data = {
             "appointment_id": "APP002",

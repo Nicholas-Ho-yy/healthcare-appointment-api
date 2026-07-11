@@ -2,10 +2,12 @@ from django import forms
 from .models import Patient
 
 
-# Form used to create new patient records through the web interface.
+# Django form used to add a new patient through the website.
 class PatientForm(forms.ModelForm):
     class Meta:
         model = Patient
+
+        # Fields shown on the patient registration form.
         fields = [
             'patient_id',
             'gender',
@@ -17,12 +19,13 @@ class PatientForm(forms.ModelForm):
             'handicap',
         ]
         widgets = {
-            # Browser-level hint only -- the real enforcement still happens
-            # in clean_handicap() below, since HTML min/max attributes can
-            # be bypassed (e.g. by editing the DOM or submitting via curl).
+            # Limit the handicap input shown in the browser.
+            # Validation is still performed below because users
+            # can bypass HTML input restrictions.
             'handicap': forms.NumberInput(attrs={'min': 0, 'max': 1}),
         }
 
+    # This makes sure the age entered is not negative.
     def clean_age(self):
         age = self.cleaned_data.get('age')
 
@@ -31,6 +34,7 @@ class PatientForm(forms.ModelForm):
 
         return age
 
+    # Only allow the values by the dataset.
     def clean_gender(self):
         gender = self.cleaned_data.get('gender')
 
@@ -39,6 +43,7 @@ class PatientForm(forms.ModelForm):
 
         return gender
 
+    # Check that the handicap value is within the allowed range.
     def clean_handicap(self):
         handicap = self.cleaned_data.get('handicap')
 

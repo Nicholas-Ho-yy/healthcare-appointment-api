@@ -9,22 +9,24 @@ from django.utils.dateparse import parse_datetime
 from appointments.models import Patient, Neighbourhood, Appointment
 
 
-# Maximum number of rows to import (assignment requirement)
+# Only import the first 10,000 rows, as required by the assignment.
 MAX_ROWS = 10000
 
 
 def to_bool(value):
     """
-    Convert CSV boolean-like values into Python booleans.
+    Convert values such as 1, true, and yes into a Boolean.
     """
     return str(value).strip().lower() in ["1", "true", "yes"]
 
 
 def to_int(value):
     """
-    Convert CSV numeric/boolean-like values into integers.
-    """
+    Convert CSV values into integers.
 
+    Some columns use true and false instead of 1 and 0,
+    so these values are handled before converting to an integer.
+    """
     value = str(value).strip()
 
     if value.lower() in ["true", "yes"]:
@@ -37,6 +39,13 @@ def to_int(value):
 
 
 class Command(BaseCommand):
+    """
+    Load healthcare appointment data from the CSV file.
+
+    The command clears the existing records first so that running
+    the import again does not create any duplicate data.
+    """
+
     help = "Load Healthcare Appointment No-Show dataset into the database"
 
     def handle(self, *args, **kwargs):
@@ -48,6 +57,7 @@ class Command(BaseCommand):
             / "healthcare_noshows.csv"
         )
 
+        # Stop the command and show an error if the CSV cannot be found.
         if not csv_path.exists():
             self.stdout.write(
                 self.style.ERROR(f"CSV file not found: {csv_path}")
@@ -57,16 +67,14 @@ class Command(BaseCommand):
         imported = 0
         skipped = 0
 
-        # Wrap the entire import inside one transaction.
-        # If any unexpected error occurs, everything rolls back.
+        # Keep the reset and import inside one transaction.
+        # If an unexpected error occurs, Django can roll back the changes.
         with transaction.atomic():
 
-            # -------------------------------------------------------
+
             # Reset database before loading.
-            # This was specifically requested in the lecturer feedback.
             # Delete Appointment records first because they depend on
             # Patient and Neighbourhood through foreign keys.
-            # -------------------------------------------------------
             self.stdout.write("Removing existing data...")
 
             Appointment.objects.all().delete()
@@ -77,21 +85,16 @@ class Command(BaseCommand):
                 self.style.SUCCESS("Database successfully reset.")
             )
 
-            # -------------------------------------------------------
-            # Read the CSV file.
-            # -------------------------------------------------------
+            # Open the CSV and process one row at a time.
             with open(csv_path, newline="", encoding="utf-8") as csv_file:
-
                 reader = csv.DictReader(csv_file)
 
                 for row in reader:
-
-                    # Stop after importing the first 10,000 rows.
+                    # Stop once 10,000 rows have been imported.
                     if imported >= MAX_ROWS:
                         break
 
                     try:
-
                         # Create patient if it does not already exist.
                         patient, _ = Patient.objects.get_or_create(
                             patient_id=row["PatientId"],
@@ -111,7 +114,8 @@ class Command(BaseCommand):
                             name=row["Neighbourhood"]
                         )
 
-                        # Create appointment record.
+                        # Create the appointment and connect it to
+                        # the related patient and neighbourhood.
                         Appointment.objects.create(
                             appointment_id=row["AppointmentID"],
                             patient=patient,
@@ -136,7 +140,7 @@ class Command(BaseCommand):
                         imported += 1
 
                     except (ValueError, KeyError) as error:
-
+                        # Skip bad rows instead of stopping the full import.
                         skipped += 1
 
                         self.stdout.write(
